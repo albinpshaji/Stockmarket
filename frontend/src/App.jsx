@@ -10,28 +10,35 @@ import PerformanceChart from './components/Chart/PerformanceChart';
 import MetricsGrid from './components/Metrics/MetricsGrid';
 
 const App = () => {
-  const [ticker, setTicker] = useState('^NSEI');
+  const [ticker, setTicker] = useState('');
   const [amount, setAmount] = useState(10000);
-  
-  // Set default dates: Start date is 5 years ago, End date is today
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [copied, setCopied] = useState(false);
 
+  // Initialize variables from URL parameters or defaults
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlTicker = params.get('ticker');
+    const urlAmount = params.get('amount');
+    const urlStart = params.get('start');
+    const urlEnd = params.get('end');
+
     const today = new Date();
-    const end = today.toISOString().split('T')[0];
-    
+    const defaultEnd = today.toISOString().split('T')[0];
     const startYear = today.getFullYear() - 5;
-    const start = new Date(startYear, today.getMonth(), today.getDate())
+    const defaultStart = new Date(startYear, today.getMonth(), today.getDate())
       .toISOString()
       .split('T')[0];
-      
-    setStartDate(start);
-    setEndDate(end);
+
+    setTicker(urlTicker || '^NSEI');
+    setAmount(urlAmount ? Number(urlAmount) : 10000);
+    setStartDate(urlStart || defaultStart);
+    setEndDate(urlEnd || defaultEnd);
   }, []);
 
   const handleSimulate = async () => {
@@ -69,12 +76,46 @@ const App = () => {
     setEndDate(preset.endDate);
   };
 
-  // Run default simulation on mount once dates are set
+  // Run simulation on load once dates/ticker are pre-populated
   useEffect(() => {
-    if (startDate && endDate) {
+    if (startDate && endDate && ticker) {
       handleSimulate();
     }
-  }, [startDate, endDate]);
+  }, [startDate, endDate, ticker]);
+
+  // Export time-series data to CSV
+  const handleExportCSV = () => {
+    if (!result || !result.timeseries) return;
+    
+    const headers = ['Date', 'Close Price (INR)', 'Cash Invested (INR)', 'Portfolio Value (INR)', 'Units Held'];
+    const rows = result.timeseries.map(row => [
+      row.date,
+      row.price,
+      row.cash_invested,
+      row.portfolio_value,
+      row.units_held
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' 
+      + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `RupeeSIP_Backtest_${result.ticker}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Share URL simulation mapping
+  const handleShare = () => {
+    const shareUrl = `${window.location.origin}${window.location.pathname}?ticker=${ticker}&amount=${amount}&start=${startDate}&end=${endDate}`;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -96,6 +137,7 @@ const App = () => {
           gap: '30px',
           alignItems: 'start'
         }} className="responsive-grid">
+          
           {/* Controls Panel */}
           <div className="glass-card" style={{
             display: 'flex',
@@ -184,9 +226,61 @@ const App = () => {
               result && (
                 <>
                   <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <h3 style={{ fontSize: '1.2rem', color: '#fff' }}>
-                      Performance Visualizer ({result.ticker})
-                    </h3>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      borderBottom: '1px solid rgba(255,255,255,0.05)',
+                      paddingBottom: '12px',
+                      flexWrap: 'wrap',
+                      gap: '12px'
+                    }}>
+                      <h3 style={{ fontSize: '1.2rem', color: '#fff' }}>
+                        Performance Visualizer ({result.ticker})
+                      </h3>
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                          onClick={handleShare}
+                          style={{
+                            background: 'rgba(255,255,255,0.03)',
+                            border: '1px solid var(--border-color)',
+                            color: 'var(--text-primary)',
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.06)'}
+                          onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.03)'}
+                        >
+                          {copied ? 'Copied!' : 'Share'}
+                        </button>
+                        <button
+                          onClick={handleExportCSV}
+                          style={{
+                            background: 'rgba(255,255,255,0.03)',
+                            border: '1px solid var(--border-color)',
+                            color: 'var(--text-primary)',
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.06)'}
+                          onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.03)'}
+                        >
+                          Export CSV
+                        </button>
+                      </div>
+                    </div>
                     <PerformanceChart data={result.timeseries} />
                   </div>
                   
