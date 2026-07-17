@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
-from backend.routes.simulation import router as simulation_router
+from routes.simulation import router as simulation_router
 
 app = FastAPI(
     title="SIP Backtesting API",

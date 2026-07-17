@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 import requests
-from backend.services.data_service import fetch_historical_data
-from backend.services.simulation_service import simulate_sip
-from backend.services.metrics_service import calculate_metrics
+from services.data_service import fetch_historical_data
+from services.simulation_service import simulate_sip
+from services.metrics_service import calculate_metrics
 
 router = APIRouter(prefix="/api")
 
