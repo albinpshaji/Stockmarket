@@ -15,15 +15,13 @@ const App = () => {
   const [amount, setAmount] = useState(10000);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
 
-  // Helper to map known tickers to their friendly names
   const getTickerName = (symbol) => {
-    const cleanSym = symbol.trim().upperCase ? symbol.trim().toUpperCase() : symbol.trim();
+    const cleanSym = symbol.trim().toUpperCase();
     const mappings = {
       '^NSEI': 'Nifty 50 Index',
       '^BSESN': 'Sensex Index',
@@ -39,7 +37,6 @@ const App = () => {
     return mappings[cleanSym] || symbol;
   };
 
-  // Initialize variables from URL parameters or defaults
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlTicker = params.get('ticker') || '^NSEI';
