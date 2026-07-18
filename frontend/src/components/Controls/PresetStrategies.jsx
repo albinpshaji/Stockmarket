@@ -1,6 +1,6 @@
 import React from 'react';
 
-const PresetStrategies = ({ onSelectPreset }) => {
+const PresetStrategies = ({ currentTicker, currentAmount, onSelectPreset }) => {
   const presets = [
     {
       label: 'Nifty 50 Index',
@@ -35,7 +35,6 @@ const PresetStrategies = ({ onSelectPreset }) => {
   const handleSelect = (preset) => {
     const today = new Date();
     const end = today.toISOString().split('T')[0];
-    
     const startYear = today.getFullYear() - preset.yearsAgo;
     const start = new Date(startYear, today.getMonth(), today.getDate())
       .toISOString()
@@ -47,6 +46,13 @@ const PresetStrategies = ({ onSelectPreset }) => {
       startDate: start,
       endDate: end
     });
+  };
+
+  const isPresetActive = (preset) => {
+    // Strip suffixes to allow broad match (e.g. RELIANCE vs RELIANCE.NS)
+    const cleanCurrent = currentTicker ? currentTicker.replace('.NS', '').trim().toUpperCase() : '';
+    const cleanPreset = preset.ticker.replace('.NS', '').trim().toUpperCase();
+    return cleanCurrent === cleanPreset && currentAmount === preset.amount;
   };
 
   return (
@@ -65,38 +71,46 @@ const PresetStrategies = ({ onSelectPreset }) => {
         gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
         gap: '10px'
       }}>
-        {presets.map((preset) => (
-          <button
-            key={preset.label}
-            onClick={() => handleSelect(preset)}
-            style={{
-              padding: '10px',
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '10px',
-              color: 'var(--text-primary)',
-              cursor: 'pointer',
-              textAlign: 'left',
-              transition: 'all 0.2s ease',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--color-primary)';
-              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-color)';
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-            }}
-          >
-            <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{preset.label}</span>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-              {preset.yearsAgo} Yrs • ₹{preset.amount}/mo
-            </span>
-          </button>
-        ))}
+        {presets.map((preset) => {
+          const active = isPresetActive(preset);
+          return (
+            <button
+              key={preset.label}
+              onClick={() => handleSelect(preset)}
+              style={{
+                padding: '12px 10px',
+                background: active ? 'rgba(59, 130, 246, 0.06)' : 'rgba(255, 255, 255, 0.03)',
+                border: active ? '2px solid var(--color-primary)' : '1px solid var(--border-color)',
+                borderRadius: '12px',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+                boxShadow: active ? '0 0 10px rgba(59, 130, 246, 0.12)' : 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (!active) {
+                  e.currentTarget.style.borderColor = 'var(--color-primary)';
+                  e.currentTarget.style.background = 'rgba(59, 130, 246, 0.05)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!active) {
+                  e.currentTarget.style.borderColor = 'var(--border-color)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                }
+              }}
+            >
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{preset.label}</span>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                {preset.yearsAgo} Yrs • ₹{preset.amount}/mo
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

@@ -233,7 +233,11 @@ const App = () => {
               setEndDate={setEndDate} 
             />
             
-            <PresetStrategies onSelectPreset={handleSelectPreset} />
+            <PresetStrategies 
+              currentTicker={ticker} 
+              currentAmount={amount} 
+              onSelectPreset={handleSelectPreset} 
+            />
             
             <button 
               className="btn-primary" 
@@ -349,6 +353,29 @@ const App = () => {
                         >
                           Export CSV
                         </button>
+                      </div>
+                    </div>
+                    <div style={{
+                      display: 'flex',
+                      gap: '16px',
+                      flexWrap: 'wrap',
+                      background: 'rgba(59, 130, 246, 0.04)',
+                      border: '1px solid rgba(59, 130, 246, 0.08)',
+                      borderRadius: '12px',
+                      padding: '12px 18px',
+                      fontSize: '0.85rem',
+                      color: 'var(--text-secondary)'
+                    }}>
+                      <div>
+                        <strong>Strategy:</strong> <span style={{ color: '#0f172a', fontWeight: 600 }}>Normal SIP (Monthly)</span>
+                      </div>
+                      <div style={{ color: 'rgba(0,0,0,0.1)' }}>|</div>
+                      <div>
+                        <strong>Frequency:</strong> <span style={{ color: '#0f172a', fontWeight: 600 }}>1st Trading Day of Month</span>
+                      </div>
+                      <div style={{ color: 'rgba(0,0,0,0.1)' }}>|</div>
+                      <div>
+                        <strong>Installment Amount:</strong> <span style={{ color: '#0f172a', fontWeight: 600 }}>₹{new Intl.NumberFormat('en-IN').format(amount)}</span>
                       </div>
                     </div>
                     <PerformanceChart data={result.timeseries} />
