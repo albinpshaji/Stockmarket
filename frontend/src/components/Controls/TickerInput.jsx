@@ -66,62 +66,70 @@ const TickerInput = ({ selectedTicker, setSelectedTicker }) => {
       }}>
         Search Stock / Index Ticker
       </label>
-      <input
-        type="text"
-        className="input-field"
-        placeholder="Enter stock name (e.g. RELIANCE, TCS, Nifty)"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        onFocus={() => {
-          if (suggestions.length > 0) setShowDropdown(true);
-        }}
-      />
-      {loading && (
-        <div style={{
-          position: 'absolute',
-          right: '12px',
-          bottom: '12px',
-          width: '16px',
-          height: '16px',
-          border: '2px solid rgba(255,255,255,0.1)',
-          borderTopColor: 'var(--color-primary)',
-          borderRadius: '50%',
-          animation: 'spin 0.8s linear infinite'
-        }} />
-      )}
+      <div style={{ position: 'relative' }}>
+        <input
+          type="text"
+          className="input-field"
+          placeholder="Enter stock name (e.g. RELIANCE, TCS, Nifty)"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => {
+            if (suggestions.length > 0) setShowDropdown(true);
+          }}
+          style={{ paddingRight: '40px' }}
+        />
+        {loading && (
+          <div style={{
+            position: 'absolute',
+            right: '16px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: '16px',
+            height: '16px',
+            border: '2px solid rgba(0,0,0,0.05)',
+            borderTopColor: 'var(--color-primary)',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite'
+          }} />
+        )}
+      </div>
+      
       {showDropdown && suggestions.length > 0 && (
         <ul style={{
           position: 'absolute',
           top: '100%',
           left: 0,
           right: 0,
-          marginTop: '6px',
-          background: 'var(--bg-primary)',
-          border: '1px solid var(--border-color)',
-          borderRadius: '10px',
+          marginTop: '8px',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(0,0,0,0.06)',
+          borderRadius: '16px',
           maxHeight: '220px',
           overflowY: 'auto',
-          zIndex: 50,
+          zIndex: 150,
           listStyle: 'none',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+          boxShadow: '0 10px 30px -10px rgba(15, 23, 42, 0.15)',
+          padding: '6px 0'
         }}>
           {suggestions.map((item) => (
             <li
               key={item.yahoo_symbol}
               onClick={() => handleSelect(item)}
               style={{
-                padding: '10px 14px',
+                padding: '10px 18px',
                 cursor: 'pointer',
                 display: 'flex',
                 justifyContent: 'space-between',
                 fontSize: '0.9rem',
-                borderBottom: '1px solid rgba(255,255,255,0.02)',
-                transition: 'background 0.2s'
+                borderBottom: '1px solid rgba(0, 0, 0, 0.02)',
+                transition: 'background 0.2s',
+                color: 'var(--text-primary)'
               }}
-              onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.03)'}
-              onMouseLeave={(e) => e.target.style.background = 'transparent'}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.02)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
-              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.symbol}</span>
+              <span style={{ fontWeight: 600 }}>{item.symbol}</span>
               <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', maxWidth: '70%', textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {item.name}
               </span>

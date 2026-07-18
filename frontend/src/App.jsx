@@ -126,15 +126,59 @@ const App = () => {
         width: '100%',
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '40px 20px',
+        padding: '30px 20px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '30px'
+        gap: '40px'
       }}>
+        
+        {/* Minimalist Hero Heading just like screenshot mockup */}
+        <section style={{
+          textAlign: 'center',
+          padding: '40px 10px 10px 10px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}>
+          <div style={{
+            display: 'inline-flex',
+            fontSize: '0.8rem',
+            color: 'var(--color-primary)',
+            background: 'rgba(59, 130, 246, 0.06)',
+            padding: '6px 16px',
+            borderRadius: '9999px',
+            fontWeight: 500,
+            marginBottom: '20px',
+            border: '1px solid rgba(59, 130, 246, 0.15)'
+          }}>
+            India's Sovereign SIP Backtest Platform
+          </div>
+          <h2 style={{
+            fontSize: '2.8rem',
+            fontWeight: 700,
+            lineHeight: 1.25,
+            color: '#0f172a',
+            maxWidth: '800px',
+            marginBottom: '16px',
+            fontFamily: "'Outfit', sans-serif"
+          }}>
+            Wealth creation for all from India
+          </h2>
+          <p style={{
+            fontSize: '1.05rem',
+            color: 'var(--text-secondary)',
+            maxWidth: '620px',
+            lineHeight: 1.6
+          }}>
+            Test systematic investment strategies against real historical stock market data. 
+            Adjust variables to instantly backtest and visualizes capital growth.
+          </p>
+        </section>
+
         <div style={{
           display: 'grid',
           gridTemplateColumns: '1fr',
-          gap: '30px',
+          gap: '35px',
           alignItems: 'start'
         }} className="responsive-grid">
           
@@ -146,7 +190,7 @@ const App = () => {
             position: 'sticky',
             top: '100px'
           }}>
-            <h3 style={{ fontSize: '1.2rem', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
+            <h3 style={{ fontSize: '1.15rem', color: '#0f172a', borderBottom: '1px solid rgba(0,0,0,0.05)', paddingBottom: '12px' }}>
               Simulation Variables
             </h3>
             
@@ -172,13 +216,13 @@ const App = () => {
           </div>
 
           {/* Results Visualizer Section */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '35px', width: '100%' }}>
             {error && (
               <div className="glass-card" style={{
                 borderColor: 'var(--color-danger)',
-                background: 'rgba(239, 68, 68, 0.05)',
+                background: 'rgba(239, 68, 68, 0.03)',
                 color: 'var(--text-primary)',
-                padding: '20px',
+                padding: '24px',
                 textAlign: 'center'
               }}>
                 <h4 style={{ color: 'var(--color-danger)', marginBottom: '8px' }}>Simulation Error</h4>
@@ -191,7 +235,7 @@ const App = () => {
                     border: '1px solid var(--color-danger)',
                     color: 'var(--color-danger)',
                     boxShadow: 'none',
-                    padding: '8px 16px',
+                    padding: '8px 20px',
                     fontSize: '0.85rem',
                     marginTop: '12px'
                   }}
@@ -211,15 +255,15 @@ const App = () => {
                 gap: '16px'
               }}>
                 <div style={{
-                  width: '40px',
-                  height: '40px',
-                  border: '3px solid rgba(255,255,255,0.05)',
+                  width: '36px',
+                  height: '36px',
+                  border: '3px solid rgba(0,0,0,0.05)',
                   borderTopColor: 'var(--color-primary)',
                   borderRadius: '50%',
                   animation: 'spin 1s linear infinite'
                 }} />
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                  Fetching historical data and running simulation...
+                  Running simulation...
                 </p>
               </div>
             ) : (
@@ -230,52 +274,48 @@ const App = () => {
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      borderBottom: '1px solid rgba(255,255,255,0.05)',
+                      borderBottom: '1px solid rgba(0,0,0,0.04)',
                       paddingBottom: '12px',
                       flexWrap: 'wrap',
                       gap: '12px'
                     }}>
-                      <h3 style={{ fontSize: '1.2rem', color: '#fff' }}>
+                      <h3 style={{ fontSize: '1.15rem', color: '#0f172a' }}>
                         Performance Visualizer ({result.ticker})
                       </h3>
                       <div style={{ display: 'flex', gap: '10px' }}>
                         <button
                           onClick={handleShare}
                           style={{
-                            background: 'rgba(255,255,255,0.03)',
-                            border: '1px solid var(--border-color)',
-                            color: 'var(--text-primary)',
-                            padding: '6px 12px',
-                            borderRadius: '8px',
+                            background: 'transparent',
+                            border: '1px solid rgba(0, 0, 0, 0.08)',
+                            color: '#0f172a',
+                            padding: '6px 16px',
+                            borderRadius: '9999px',
                             cursor: 'pointer',
                             fontSize: '0.8rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
+                            fontWeight: 500,
                             transition: 'all 0.2s'
                           }}
-                          onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.06)'}
-                          onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.03)'}
+                          onMouseEnter={(e) => e.target.style.background = 'rgba(0,0,0,0.02)'}
+                          onMouseLeave={(e) => e.target.style.background = 'transparent'}
                         >
                           {copied ? 'Copied!' : 'Share'}
                         </button>
                         <button
                           onClick={handleExportCSV}
                           style={{
-                            background: 'rgba(255,255,255,0.03)',
-                            border: '1px solid var(--border-color)',
-                            color: 'var(--text-primary)',
-                            padding: '6px 12px',
-                            borderRadius: '8px',
+                            background: 'transparent',
+                            border: '1px solid rgba(0, 0, 0, 0.08)',
+                            color: '#0f172a',
+                            padding: '6px 16px',
+                            borderRadius: '9999px',
                             cursor: 'pointer',
                             fontSize: '0.8rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
+                            fontWeight: 500,
                             transition: 'all 0.2s'
                           }}
-                          onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.06)'}
-                          onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.03)'}
+                          onMouseEnter={(e) => e.target.style.background = 'rgba(0,0,0,0.02)'}
+                          onMouseLeave={(e) => e.target.style.background = 'transparent'}
                         >
                           Export CSV
                         </button>
@@ -302,7 +342,7 @@ const App = () => {
         }
         @media (min-width: 850px) {
           .responsive-grid {
-            grid-template-columns: 350px 1fr !important;
+            grid-template-columns: 360px 1fr !important;
           }
         }
       `}</style>

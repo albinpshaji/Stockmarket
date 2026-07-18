@@ -13,7 +13,6 @@ import {
 const PerformanceChart = ({ data }) => {
   if (!data || data.length === 0) return null;
 
-  // Format currency values into lakhs/crores or standard Indian notation
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -22,7 +21,6 @@ const PerformanceChart = ({ data }) => {
     }).format(value);
   };
 
-  // Convert Date strings (YYYY-MM-DD) to friendly formats like "Jan 2021"
   const formatDate = (tickItem) => {
     try {
       const date = new Date(tickItem);
@@ -32,23 +30,23 @@ const PerformanceChart = ({ data }) => {
     }
   };
 
-  // Custom tooltips inside the area chart
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const dateStr = formatDate(payload[0].payload.date);
       return (
         <div className="glass-card" style={{
-          padding: '12px 16px',
-          background: 'rgba(10, 14, 23, 0.9)',
-          border: '1px solid rgba(255,255,255,0.15)',
-          fontSize: '0.9rem'
+          padding: '12px 18px',
+          background: 'rgba(255, 255, 255, 0.95)',
+          border: '1px solid rgba(0, 0, 0, 0.06)',
+          fontSize: '0.9rem',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.05)'
         }}>
-          <p style={{ fontWeight: 600, marginBottom: '8px', color: 'var(--text-primary)' }}>{dateStr}</p>
-          <p style={{ color: 'var(--color-primary)', display: 'flex', gap: '8px', justifyContent: 'space-between' }}>
+          <p style={{ fontWeight: 600, marginBottom: '8px', color: '#0f172a' }}>{dateStr}</p>
+          <p style={{ color: 'var(--color-primary)', display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
             <span>Invested:</span>
             <strong>{formatCurrency(payload[0].value)}</strong>
           </p>
-          <p style={{ color: 'var(--color-accent)', display: 'flex', gap: '8px', justifyContent: 'space-between', marginTop: '4px' }}>
+          <p style={{ color: 'var(--color-accent)', display: 'flex', gap: '12px', justifyContent: 'space-between', marginTop: '4px' }}>
             <span>Portfolio:</span>
             <strong>{formatCurrency(payload[1].value)}</strong>
           </p>
@@ -59,7 +57,7 @@ const PerformanceChart = ({ data }) => {
   };
 
   return (
-    <div style={{ width: '100%', height: '400px', marginTop: '20px' }}>
+    <div style={{ width: '100%', height: '400px', marginTop: '10px' }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={data}
@@ -67,15 +65,15 @@ const PerformanceChart = ({ data }) => {
         >
           <defs>
             <linearGradient id="colorInvested" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.25}/>
+              <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.12}/>
               <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0}/>
             </linearGradient>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.35}/>
+              <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.2}/>
               <stop offset="95%" stopColor="var(--color-accent)" stopOpacity={0}/>
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 0, 0, 0.04)" vertical={false} />
           <XAxis 
             dataKey="date" 
             tickFormatter={formatDate}
@@ -97,7 +95,7 @@ const PerformanceChart = ({ data }) => {
             height={36}
             iconType="circle"
             formatter={(value) => (
-              <span style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}>{value}</span>
+              <span style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }}>{value}</span>
             )}
           />
           <Area
