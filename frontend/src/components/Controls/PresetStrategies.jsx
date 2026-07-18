@@ -41,6 +41,7 @@ const PresetStrategies = ({ currentTicker, currentAmount, onSelectPreset }) => {
       .split('T')[0];
       
     onSelectPreset({
+      label: preset.label,
       ticker: preset.ticker,
       amount: preset.amount,
       startDate: start,
@@ -49,7 +50,6 @@ const PresetStrategies = ({ currentTicker, currentAmount, onSelectPreset }) => {
   };
 
   const isPresetActive = (preset) => {
-    // Strip suffixes to allow broad match (e.g. RELIANCE vs RELIANCE.NS)
     const cleanCurrent = currentTicker ? currentTicker.replace('.NS', '').trim().toUpperCase() : '';
     const cleanPreset = preset.ticker.replace('.NS', '').trim().toUpperCase();
     return cleanCurrent === cleanPreset && currentAmount === preset.amount;
