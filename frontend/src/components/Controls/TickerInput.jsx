@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
-const TickerInput = ({ selectedTicker, setSelectedTicker }) => {
+const TickerInput = ({ selectedTicker, selectedTickerName, onTickerSelect }) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -50,9 +50,18 @@ const TickerInput = ({ selectedTicker, setSelectedTicker }) => {
   }, [query, selectedTicker]);
 
   const handleSelect = (ticker) => {
-    setSelectedTicker(ticker.symbol);
+    onTickerSelect(ticker.symbol, ticker.name);
     setQuery(ticker.symbol);
     setShowDropdown(false);
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setQuery(value);
+    // If the user starts typing, clean the selected name to prevent outdated labels
+    if (value !== selectedTicker) {
+      onTickerSelect(value, '');
+    }
   };
 
   return (
@@ -72,7 +81,7 @@ const TickerInput = ({ selectedTicker, setSelectedTicker }) => {
           className="input-field"
           placeholder="Enter stock name (e.g. RELIANCE, TCS, Nifty)"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={handleInputChange}
           onFocus={() => {
             if (suggestions.length > 0) setShowDropdown(true);
           }}
@@ -93,6 +102,19 @@ const TickerInput = ({ selectedTicker, setSelectedTicker }) => {
           }} />
         )}
       </div>
+      
+      {/* Show friendly name underneath the search box */}
+      {selectedTickerName && (
+        <div style={{
+          fontSize: '0.75rem',
+          color: 'var(--color-accent)',
+          marginTop: '6px',
+          paddingLeft: '10px',
+          fontWeight: 500
+        }}>
+          Selected: {selectedTickerName}
+        </div>
+      )}
       
       {showDropdown && suggestions.length > 0 && (
         <ul style={{

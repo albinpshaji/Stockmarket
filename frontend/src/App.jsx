@@ -11,6 +11,7 @@ import MetricsGrid from './components/Metrics/MetricsGrid';
 
 const App = () => {
   const [ticker, setTicker] = useState('');
+  const [tickerName, setTickerName] = useState('');
   const [amount, setAmount] = useState(10000);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -20,10 +21,28 @@ const App = () => {
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
 
+  // Helper to map known tickers to their friendly names
+  const getTickerName = (symbol) => {
+    const cleanSym = symbol.trim().upperCase ? symbol.trim().toUpperCase() : symbol.trim();
+    const mappings = {
+      '^NSEI': 'Nifty 50 Index',
+      '^BSESN': 'Sensex Index',
+      'RELIANCE': 'Reliance Industries Ltd.',
+      'RELIANCE.NS': 'Reliance Industries Ltd.',
+      'TCS': 'Tata Consultancy Services Ltd.',
+      'TCS.NS': 'Tata Consultancy Services Ltd.',
+      'HDFCBANK': 'HDFC Bank Ltd.',
+      'HDFCBANK.NS': 'HDFC Bank Ltd.',
+      'INFY': 'Infosys Ltd.',
+      'INFY.NS': 'Infosys Ltd.'
+    };
+    return mappings[cleanSym] || symbol;
+  };
+
   // Initialize variables from URL parameters or defaults
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const urlTicker = params.get('ticker');
+    const urlTicker = params.get('ticker') || '^NSEI';
     const urlAmount = params.get('amount');
     const urlStart = params.get('start');
     const urlEnd = params.get('end');
@@ -35,7 +54,8 @@ const App = () => {
       .toISOString()
       .split('T')[0];
 
-    setTicker(urlTicker || '^NSEI');
+    setTicker(urlTicker);
+    setTickerName(getTickerName(urlTicker));
     setAmount(urlAmount ? Number(urlAmount) : 10000);
     setStartDate(urlStart || defaultStart);
     setEndDate(urlEnd || defaultEnd);
@@ -71,9 +91,15 @@ const App = () => {
 
   const handleSelectPreset = (preset) => {
     setTicker(preset.ticker);
+    setTickerName(preset.label);
     setAmount(preset.amount);
     setStartDate(preset.startDate);
     setEndDate(preset.endDate);
+  };
+
+  const handleTickerSelect = (symbol, name) => {
+    setTicker(symbol);
+    setTickerName(name || getTickerName(symbol));
   };
 
   // Run simulation on load once dates/ticker are pre-populated
@@ -132,7 +158,7 @@ const App = () => {
         gap: '40px'
       }}>
         
-        {/* Minimalist Hero Heading just like screenshot mockup */}
+        {/* Minimalist Hero Heading */}
         <section style={{
           textAlign: 'center',
           padding: '40px 10px 10px 10px',
@@ -171,7 +197,7 @@ const App = () => {
             lineHeight: 1.6
           }}>
             Test systematic investment strategies against real historical stock market data. 
-            Adjust variables to instantly backtest and visualizes capital growth.
+            Adjust variables to instantly backtest and visualize capital growth.
           </p>
         </section>
 
@@ -194,7 +220,11 @@ const App = () => {
               Simulation Variables
             </h3>
             
-            <TickerInput selectedTicker={ticker} setSelectedTicker={setTicker} />
+            <TickerInput 
+              selectedTicker={ticker} 
+              selectedTickerName={tickerName} 
+              onTickerSelect={handleTickerSelect} 
+            />
             <AmountSlider amount={amount} setAmount={setAmount} />
             <DateRangePicker 
               startDate={startDate} 
@@ -280,7 +310,7 @@ const App = () => {
                       gap: '12px'
                     }}>
                       <h3 style={{ fontSize: '1.15rem', color: '#0f172a' }}>
-                        Performance Visualizer ({result.ticker})
+                        Performance Visualizer — {tickerName || result.ticker}
                       </h3>
                       <div style={{ display: 'flex', gap: '10px' }}>
                         <button

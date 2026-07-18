@@ -3,8 +3,8 @@ import React from 'react';
 const DateRangePicker = ({ startDate, setStartDate, endDate, setEndDate }) => {
   return (
     <div style={{
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
+      display: 'flex',
+      flexDirection: 'column',
       gap: '16px',
       width: '100%'
     }}>
@@ -23,6 +23,7 @@ const DateRangePicker = ({ startDate, setStartDate, endDate, setEndDate }) => {
           className="input-field"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
+          style={{ width: '100%' }}
         />
       </div>
       <div>
@@ -40,6 +41,7 @@ const DateRangePicker = ({ startDate, setStartDate, endDate, setEndDate }) => {
           className="input-field"
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
+          style={{ width: '100%' }}
         />
       </div>
     </div>
