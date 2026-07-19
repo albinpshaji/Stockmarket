@@ -6,6 +6,7 @@ import TickerInput from './components/Controls/TickerInput';
 import AmountSlider from './components/Controls/AmountSlider';
 import DateRangePicker from './components/Controls/DateRangePicker';
 import PresetStrategies from './components/Controls/PresetStrategies';
+import StrategySelector from './components/Controls/StrategySelector';
 import PerformanceChart from './components/Chart/PerformanceChart';
 import MetricsGrid from './components/Metrics/MetricsGrid';
 
@@ -15,11 +16,22 @@ const App = () => {
   const [amount, setAmount] = useState(10000);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
 
+  // Strategy options state
+  const [strategy, setStrategy] = useState('NORMAL');
+  const [drawdownSteps, setDrawdownSteps] = useState([
+    { drawdown: 10, multiplier: 0 },
+    { drawdown: 20, multiplier: 50 },
+    { drawdown: 30, multiplier: 100 },
+    { drawdown: 40, multiplier: 150 }
+  ]);
+
+  // Helper to map known tickers to their friendly names
   const getTickerName = (symbol) => {
     const cleanSym = symbol.trim().toUpperCase();
     const mappings = {
@@ -37,12 +49,15 @@ const App = () => {
     return mappings[cleanSym] || symbol;
   };
 
+  // Initialize variables from URL parameters or defaults
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlTicker = params.get('ticker') || '^NSEI';
     const urlAmount = params.get('amount');
     const urlStart = params.get('start');
     const urlEnd = params.get('end');
+    const urlStrategy = params.get('strategy');
+    const urlSteps = params.get('steps');
 
     const today = new Date();
     const defaultEnd = today.toISOString().split('T')[0];
@@ -56,6 +71,14 @@ const App = () => {
     setAmount(urlAmount ? Number(urlAmount) : 10000);
     setStartDate(urlStart || defaultStart);
     setEndDate(urlEnd || defaultEnd);
+    if (urlStrategy) setStrategy(urlStrategy);
+    if (urlSteps) {
+      try {
+        setDrawdownSteps(JSON.parse(decodeURIComponent(urlSteps)));
+      } catch (e) {
+        console.error('Failed to parse drawdown steps from URL', e);
+      }
+    }
   }, []);
 
   const handleSimulate = async () => {
@@ -63,22 +86,24 @@ const App = () => {
       setError('Please enter a valid stock ticker symbol.');
       return;
     }
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const res = await axios.post('http://localhost:8000/api/simulate', {
         ticker: ticker,
         monthly_amount: amount,
         start_date: startDate,
-        end_date: endDate
+        end_date: endDate,
+        strategy: strategy,
+        drawdown_steps: strategy === 'DRAWDOWN' ? drawdownSteps : null
       });
       setResult(res.data);
     } catch (err) {
       console.error(err);
       setError(
-        err.response?.data?.detail || 
+        err.response?.data?.detail ||
         'Failed to run simulation. Please check the ticker symbol and date range.'
       );
     } finally {
@@ -92,6 +117,7 @@ const App = () => {
     setAmount(preset.amount);
     setStartDate(preset.startDate);
     setEndDate(preset.endDate);
+    setStrategy('NORMAL'); // Presets default to NORMAL SIP
   };
 
   const handleTickerSelect = (symbol, name) => {
@@ -104,12 +130,12 @@ const App = () => {
     if (startDate && endDate && ticker) {
       handleSimulate();
     }
-  }, [startDate, endDate, ticker]);
+  }, [startDate, endDate, ticker, strategy, drawdownSteps]);
 
   // Export time-series data to CSV
   const handleExportCSV = () => {
     if (!result || !result.timeseries) return;
-    
+
     const headers = ['Date', 'Close Price (INR)', 'Cash Invested (INR)', 'Portfolio Value (INR)', 'Units Held'];
     const rows = result.timeseries.map(row => [
       row.date,
@@ -119,9 +145,9 @@ const App = () => {
       row.units_held
     ]);
 
-    const csvContent = 'data:text/csv;charset=utf-8,' 
+    const csvContent = 'data:text/csv;charset=utf-8,'
       + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-      
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
@@ -133,7 +159,8 @@ const App = () => {
 
   // Share URL simulation mapping
   const handleShare = () => {
-    const shareUrl = `${window.location.origin}${window.location.pathname}?ticker=${ticker}&amount=${amount}&start=${startDate}&end=${endDate}`;
+    const stepsParam = encodeURIComponent(JSON.stringify(drawdownSteps));
+    const shareUrl = `${window.location.origin}${window.location.pathname}?ticker=${ticker}&amount=${amount}&start=${startDate}&end=${endDate}&strategy=${strategy}&steps=${stepsParam}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -143,7 +170,7 @@ const App = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Header />
-      
+
       <main style={{
         flex: 1,
         width: '100%',
@@ -154,7 +181,7 @@ const App = () => {
         flexDirection: 'column',
         gap: '40px'
       }}>
-        
+
         {/* Minimalist Hero Heading */}
         <section style={{
           textAlign: 'center',
@@ -193,7 +220,7 @@ const App = () => {
             maxWidth: '620px',
             lineHeight: 1.6
           }}>
-            Test systematic investment strategies against real historical stock market data. 
+            Test systematic investment strategies against real historical stock market data.
             Adjust variables to instantly backtest and visualize capital growth.
           </p>
         </section>
@@ -204,7 +231,7 @@ const App = () => {
           gap: '35px',
           alignItems: 'start'
         }} className="responsive-grid">
-          
+
           {/* Controls Panel */}
           <div className="glass-card" style={{
             display: 'flex',
@@ -216,28 +243,37 @@ const App = () => {
             <h3 style={{ fontSize: '1.15rem', color: '#0f172a', borderBottom: '1px solid rgba(0,0,0,0.05)', paddingBottom: '12px' }}>
               Simulation Variables
             </h3>
-            
-            <TickerInput 
-              selectedTicker={ticker} 
-              selectedTickerName={tickerName} 
-              onTickerSelect={handleTickerSelect} 
+
+            <TickerInput
+              selectedTicker={ticker}
+              selectedTickerName={tickerName}
+              onTickerSelect={handleTickerSelect}
             />
+
+            {/* Strategy selector toggle tabs */}
+            <StrategySelector
+              strategy={strategy}
+              setStrategy={setStrategy}
+              drawdownSteps={drawdownSteps}
+              setDrawdownSteps={setDrawdownSteps}
+            />
+
             <AmountSlider amount={amount} setAmount={setAmount} />
-            <DateRangePicker 
-              startDate={startDate} 
-              setStartDate={setStartDate} 
-              endDate={endDate} 
-              setEndDate={setEndDate} 
+            <DateRangePicker
+              startDate={startDate}
+              setStartDate={setStartDate}
+              endDate={endDate}
+              setEndDate={setEndDate}
             />
-            
-            <PresetStrategies 
-              currentTicker={ticker} 
-              currentAmount={amount} 
-              onSelectPreset={handleSelectPreset} 
+
+            <PresetStrategies
+              currentTicker={ticker}
+              currentAmount={amount}
+              onSelectPreset={handleSelectPreset}
             />
-            
-            <button 
-              className="btn-primary" 
+
+            <button
+              className="btn-primary"
               onClick={handleSimulate}
               disabled={loading}
               style={{ width: '100%', marginTop: '8px' }}
@@ -258,9 +294,9 @@ const App = () => {
               }}>
                 <h4 style={{ color: 'var(--color-danger)', marginBottom: '8px' }}>Simulation Error</h4>
                 <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{error}</p>
-                <button 
-                  className="btn-primary" 
-                  onClick={handleSimulate} 
+                <button
+                  className="btn-primary"
+                  onClick={handleSimulate}
                   style={{
                     background: 'transparent',
                     border: '1px solid var(--color-danger)',
@@ -352,6 +388,8 @@ const App = () => {
                         </button>
                       </div>
                     </div>
+
+                    {/* Strategy Metadata Banner */}
                     <div style={{
                       display: 'flex',
                       gap: '16px',
@@ -364,7 +402,7 @@ const App = () => {
                       color: 'var(--text-secondary)'
                     }}>
                       <div>
-                        <strong>Strategy:</strong> <span style={{ color: '#0f172a', fontWeight: 600 }}>Normal SIP (Monthly)</span>
+                        <strong>Strategy:</strong> <span style={{ color: '#0f172a', fontWeight: 600 }}>{strategy === 'NORMAL' ? 'Normal SIP (Monthly)' : 'Drawdown-Based SIP'}</span>
                       </div>
                       <div style={{ color: 'rgba(0,0,0,0.1)' }}>|</div>
                       <div>
@@ -372,12 +410,13 @@ const App = () => {
                       </div>
                       <div style={{ color: 'rgba(0,0,0,0.1)' }}>|</div>
                       <div>
-                        <strong>Installment Amount:</strong> <span style={{ color: '#0f172a', fontWeight: 600 }}>₹{new Intl.NumberFormat('en-IN').format(amount)}</span>
+                        <strong>Installment Base:</strong> <span style={{ color: '#0f172a', fontWeight: 600 }}>₹{new Intl.NumberFormat('en-IN').format(amount)}</span>
                       </div>
                     </div>
+
                     <PerformanceChart data={result.timeseries} />
                   </div>
-                  
+
                   <MetricsGrid metrics={result.metrics} />
                 </>
               )
@@ -385,9 +424,9 @@ const App = () => {
           </div>
         </div>
       </main>
-      
+
       <Footer />
-      
+
       {/* Insert responsive layout utility rule directly */}
       <style>{`
         @keyframes spin {
