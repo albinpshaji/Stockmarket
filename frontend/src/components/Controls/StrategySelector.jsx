@@ -6,7 +6,9 @@ const StrategySelector = ({
   drawdownSteps, 
   setDrawdownSteps,
   stepUpPercent,
-  setStepUpPercent 
+  setStepUpPercent,
+  interestRate = 6.5,
+  setInterestRate
 }) => {
   const handleStepChange = (index, field, value) => {
     const updated = [...drawdownSteps];
@@ -41,48 +43,48 @@ const StrategySelector = ({
           onClick={() => setStrategy('NORMAL')}
           style={{
             flex: 1,
-            padding: '8px 12px',
+            padding: '8px 8px',
             border: 'none',
             borderRadius: '9999px',
             background: strategy === 'NORMAL' ? '#ffffff' : 'transparent',
             color: strategy === 'NORMAL' ? '#0f172a' : 'var(--text-secondary)',
-            fontSize: '0.8rem',
+            fontSize: '0.78rem',
             fontWeight: 600,
             cursor: 'pointer',
             transition: 'all 0.2s',
             boxShadow: strategy === 'NORMAL' ? '0 2px 6px rgba(15,23,42,0.06)' : 'none'
           }}
         >
-          Normal SIP
+          Normal
         </button>
         <button
           onClick={() => setStrategy('STEP_UP')}
           style={{
             flex: 1,
-            padding: '8px 12px',
+            padding: '8px 8px',
             border: 'none',
             borderRadius: '9999px',
             background: strategy === 'STEP_UP' ? '#ffffff' : 'transparent',
             color: strategy === 'STEP_UP' ? '#0f172a' : 'var(--text-secondary)',
-            fontSize: '0.8rem',
+            fontSize: '0.78rem',
             fontWeight: 600,
             cursor: 'pointer',
             transition: 'all 0.2s',
             boxShadow: strategy === 'STEP_UP' ? '0 2px 6px rgba(15,23,42,0.06)' : 'none'
           }}
         >
-          Step-Up SIP
+          Step-Up
         </button>
         <button
           onClick={() => setStrategy('DRAWDOWN')}
           style={{
             flex: 1,
-            padding: '8px 12px',
+            padding: '8px 8px',
             border: 'none',
             borderRadius: '9999px',
             background: strategy === 'DRAWDOWN' ? '#ffffff' : 'transparent',
             color: strategy === 'DRAWDOWN' ? '#0f172a' : 'var(--text-secondary)',
-            fontSize: '0.8rem',
+            fontSize: '0.78rem',
             fontWeight: 600,
             cursor: 'pointer',
             transition: 'all 0.2s',
@@ -91,7 +93,104 @@ const StrategySelector = ({
         >
           Drawdown
         </button>
+        <button
+          onClick={() => setStrategy('BANK_FD')}
+          style={{
+            flex: 1,
+            padding: '8px 8px',
+            border: 'none',
+            borderRadius: '9999px',
+            background: strategy === 'BANK_FD' ? '#ffffff' : 'transparent',
+            color: strategy === 'BANK_FD' ? '#0f172a' : 'var(--text-secondary)',
+            fontSize: '0.78rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            boxShadow: strategy === 'BANK_FD' ? '0 2px 6px rgba(15,23,42,0.06)' : 'none'
+          }}
+        >
+          Bank RD/FD
+        </button>
       </div>
+
+      {/* Bank RD / FD Configuration Panel */}
+      {strategy === 'BANK_FD' && (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+          background: 'rgba(245, 158, 11, 0.04)',
+          border: '1px solid rgba(245, 158, 11, 0.18)',
+          borderRadius: '16px',
+          padding: '16px',
+          marginTop: '4px'
+        }}>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+            Guaranteed compounding bank deposit baseline (zero price risk/drawdown).
+          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 500 }}>
+              Bank Interest Rate
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <input
+                type="number"
+                value={interestRate}
+                onChange={(e) => setInterestRate && setInterestRate(Math.max(0, Math.min(20, Number(e.target.value))))}
+                step="0.1"
+                style={{
+                  width: '64px',
+                  padding: '6px 10px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(0,0,0,0.12)',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  background: '#ffffff'
+                }}
+                min="0"
+                max="20"
+              />
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>% p.a.</span>
+            </div>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            paddingTop: '8px',
+            borderTop: '1px dashed rgba(0,0,0,0.08)'
+          }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)', fontWeight: 500 }}>
+              Annual Step-Up Base
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <input
+                type="number"
+                value={stepUpPercent}
+                onChange={(e) => setStepUpPercent(Math.max(0, Math.min(100, Number(e.target.value))))}
+                style={{
+                  width: '56px',
+                  padding: '4px 8px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(0,0,0,0.1)',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  background: '#ffffff'
+                }}
+                min="0"
+                max="100"
+              />
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>% / yr</span>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* Step-Up SIP Configuration Panel */}
       {strategy === 'STEP_UP' && (

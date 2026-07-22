@@ -147,6 +147,15 @@ const Header = ({ strategy, setStrategy }) => {
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Buy the Dip allocation model</span>
                 </button>
 
+                <button
+                  onClick={() => handleStrategyClick('BANK_FD')}
+                  className={`dropdown-item ${strategy === 'BANK_FD' ? 'active' : ''}`}
+                >
+                  <span style={{ fontWeight: 600 }}>Bank RD / FD Benchmark</span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Guaranteed 6.5% p.a. bank compounding</span>
+                </button>
+
+
                 {/* Extensibility placeholder items showing capability for future strategies */}
                 <div style={{
                   borderTop: '1px solid rgba(0,0,0,0.04)',

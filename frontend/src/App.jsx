@@ -25,6 +25,7 @@ const App = () => {
   // Strategy options state
   const [strategy, setStrategy] = useState('NORMAL');
   const [stepUpPercent, setStepUpPercent] = useState(10);
+  const [interestRate, setInterestRate] = useState(6.5);
   const [drawdownSteps, setDrawdownSteps] = useState([
     { drawdown: 10, multiplier: 0 },
     { drawdown: 20, multiplier: 50 },
@@ -84,6 +85,7 @@ const App = () => {
     const urlStrategy = params.get('strategy');
     const urlSteps = params.get('steps');
     const urlStepUp = params.get('step_up');
+    const urlInterestRate = params.get('interest_rate');
 
     const today = new Date();
     const defaultEnd = today.toISOString().split('T')[0];
@@ -99,6 +101,7 @@ const App = () => {
     setEndDate(urlEnd || defaultEnd);
     if (urlStrategy) setStrategy(urlStrategy);
     if (urlStepUp) setStepUpPercent(Number(urlStepUp));
+    if (urlInterestRate) setInterestRate(Number(urlInterestRate));
     if (urlSteps) {
       try {
         setDrawdownSteps(JSON.parse(decodeURIComponent(urlSteps)));
@@ -125,7 +128,8 @@ const App = () => {
         end_date: endDate,
         strategy: strategy,
         drawdown_steps: strategy === 'DRAWDOWN' ? drawdownSteps : null,
-        step_up_percent: (strategy === 'STEP_UP' || strategy === 'DRAWDOWN') ? stepUpPercent : 0.0
+        step_up_percent: (strategy === 'STEP_UP' || strategy === 'DRAWDOWN' || strategy === 'BANK_FD') ? stepUpPercent : 0.0,
+        interest_rate: interestRate
       });
 
       setResult(res.data);
@@ -139,7 +143,6 @@ const App = () => {
       setLoading(false);
     }
   };
-
 
   const handleSelectPreset = (preset) => {
     setTicker(preset.ticker);
@@ -163,7 +166,8 @@ const App = () => {
       }, 350);
       return () => clearTimeout(timer);
     }
-  }, [startDate, endDate, ticker, strategy, drawdownSteps, stepUpPercent, amount]);
+  }, [startDate, endDate, ticker, strategy, drawdownSteps, stepUpPercent, amount, interestRate]);
+
 
 
   // Export time-series data to CSV
@@ -297,7 +301,10 @@ const App = () => {
                 setDrawdownSteps={setDrawdownSteps} 
                 stepUpPercent={stepUpPercent}
                 setStepUpPercent={setStepUpPercent}
+                interestRate={interestRate}
+                setInterestRate={setInterestRate}
               />
+
             </div>
 
 
