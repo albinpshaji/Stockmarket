@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 import requests
 from services.data_service import fetch_historical_data
-from services.simulation_service import simulate_sip, simulate_drawdown_sip, simulate_step_up_sip
+from services.simulation_service import simulate_sip, simulate_drawdown_sip, simulate_step_up_sip, simulate_bank_fd_sip
 from services.metrics_service import calculate_metrics
 
 router = APIRouter(prefix="/api")
@@ -17,15 +17,16 @@ class SimulationRequest(BaseModel):
     monthly_amount: float = Field(..., gt=0, description="Monthly investment amount in INR")
     start_date: str = Field(..., description="Start date in YYYY-MM-DD format")
     end_date: str = Field(..., description="End date in YYYY-MM-DD format")
-    strategy: str = Field("NORMAL", description="Investment strategy type: NORMAL, DRAWDOWN, or STEP_UP")
+    strategy: str = Field("NORMAL", description="Investment strategy type: NORMAL, DRAWDOWN, STEP_UP, or BANK_FD")
     drawdown_steps: Optional[List[DrawdownStep]] = Field(None, description="Custom thresholds for DRAWDOWN strategy")
     step_up_percent: Optional[float] = Field(0.0, ge=0.0, le=100.0, description="Annual step up percentage for STEP_UP strategy")
+    interest_rate: Optional[float] = Field(6.5, ge=0.0, le=20.0, description="Annual interest rate percentage for BANK_FD strategy")
 
 @router.post("/simulate")
 async def run_simulation(req: SimulationRequest):
     """
     Runs the monthly SIP backtesting simulation for a given ticker and date range.
-    Supports regular fixed monthly SIP, drawdown-based dynamic scaling, and annual step-up SIP.
+    Supports regular fixed monthly SIP, drawdown-based dynamic scaling, annual step-up SIP, and Bank RD/FD.
     """
     try:
         # Fetch clean historical daily prices
@@ -39,8 +40,13 @@ async def run_simulation(req: SimulationRequest):
         elif req.strategy == "STEP_UP":
             step_up = req.step_up_percent if req.step_up_percent is not None else 10.0
             sim_df = simulate_step_up_sip(df, req.monthly_amount, step_up)
+        elif req.strategy == "BANK_FD":
+            rate = req.interest_rate if req.interest_rate is not None else 6.5
+            step_up = req.step_up_percent if req.step_up_percent is not None else 0.0
+            sim_df = simulate_bank_fd_sip(df, req.monthly_amount, rate, step_up)
         else:
             sim_df = simulate_sip(df, req.monthly_amount)
+
 
 
             

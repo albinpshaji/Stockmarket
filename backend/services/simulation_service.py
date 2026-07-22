@@ -141,3 +141,55 @@ def simulate_step_up_sip(df: pd.DataFrame, monthly_amount: float, step_up_percen
 
     return pd.DataFrame(results)
 
+
+def simulate_bank_fd_sip(df: pd.DataFrame, monthly_amount: float, interest_rate: float = 6.5, step_up_percent: float = 0.0) -> pd.DataFrame:
+    """
+    Simulates a Bank Recurring Deposit / Fixed Deposit (RD / FD) SIP Strategy.
+    Deposits a monthly installment (with optional annual step-up) on the first trading day of every month.
+    Compounds interest daily at the specified annual rate (default 6.5% p.a.).
+    """
+    cash_invested = 0.0
+    portfolio_value = 0.0
+    results = []
+    last_year_month = None
+    last_date = None
+    months_elapsed = 0
+
+    daily_interest_rate = (1.0 + (interest_rate / 100.0)) ** (1.0 / 365.25) - 1.0
+
+    for _, row in df.iterrows():
+        date = row['Date']
+        price = row['Close']
+
+        # Compound interest for elapsed calendar days since last trading day
+        if last_date is not None:
+            days_passed = (date - last_date).days
+            if days_passed > 0:
+                portfolio_value *= ((1.0 + daily_interest_rate) ** days_passed)
+
+        current_year_month = (date.year, date.month)
+
+        if current_year_month != last_year_month:
+            if last_year_month is not None:
+                months_elapsed += 1
+
+            step_multiplier = (1.0 + (step_up_percent / 100.0)) ** (months_elapsed // 12)
+            current_monthly_amount = monthly_amount * step_multiplier
+
+            cash_invested += current_monthly_amount
+            portfolio_value += current_monthly_amount
+            last_year_month = current_year_month
+
+        last_date = date
+
+        results.append({
+            'date': date.strftime('%Y-%m-%d'),
+            'cash_invested': round(cash_invested, 2),
+            'portfolio_value': round(portfolio_value, 2),
+            'price': round(price, 2),
+            'units_held': 1.0
+        })
+
+    return pd.DataFrame(results)
+
+
