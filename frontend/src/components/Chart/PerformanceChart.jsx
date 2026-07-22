@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   AreaChart,
   Area,
@@ -12,6 +12,20 @@ import {
 
 const PerformanceChart = ({ data }) => {
   if (!data || data.length === 0) return null;
+
+  // Downsample chart points if dataset is large (> 300 points) for smooth 60fps rendering
+  const chartData = useMemo(() => {
+    if (!data || data.length <= 300) return data;
+    const step = Math.ceil(data.length / 300);
+    const sampled = [];
+    for (let i = 0; i < data.length; i += step) {
+      sampled.push(data[i]);
+    }
+    if (sampled[sampled.length - 1] !== data[data.length - 1]) {
+      sampled.push(data[data.length - 1]);
+    }
+    return sampled;
+  }, [data]);
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-IN', {
@@ -56,11 +70,13 @@ const PerformanceChart = ({ data }) => {
     return null;
   };
 
+  const shouldAnimate = data.length <= 300;
+
   return (
     <div style={{ width: '100%', height: '400px', marginTop: '10px' }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
-          data={data}
+          data={chartData}
           margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
         >
           <defs>
@@ -107,6 +123,7 @@ const PerformanceChart = ({ data }) => {
             fillOpacity={1}
             fill="url(#colorInvested)"
             dot={false}
+            isAnimationActive={shouldAnimate}
           />
           <Area
             type="monotone"
@@ -117,11 +134,13 @@ const PerformanceChart = ({ data }) => {
             fillOpacity={1}
             fill="url(#colorValue)"
             dot={false}
+            isAnimationActive={shouldAnimate}
           />
         </AreaChart>
       </ResponsiveContainer>
     </div>
   );
 };
+
 
 export default PerformanceChart;

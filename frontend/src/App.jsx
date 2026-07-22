@@ -24,6 +24,7 @@ const App = () => {
 
   // Strategy options state
   const [strategy, setStrategy] = useState('NORMAL');
+  const [stepUpPercent, setStepUpPercent] = useState(10);
   const [drawdownSteps, setDrawdownSteps] = useState([
     { drawdown: 10, multiplier: 0 },
     { drawdown: 20, multiplier: 50 },
@@ -82,6 +83,7 @@ const App = () => {
     const urlEnd = params.get('end');
     const urlStrategy = params.get('strategy');
     const urlSteps = params.get('steps');
+    const urlStepUp = params.get('step_up');
 
     const today = new Date();
     const defaultEnd = today.toISOString().split('T')[0];
@@ -96,6 +98,7 @@ const App = () => {
     setStartDate(urlStart || defaultStart);
     setEndDate(urlEnd || defaultEnd);
     if (urlStrategy) setStrategy(urlStrategy);
+    if (urlStepUp) setStepUpPercent(Number(urlStepUp));
     if (urlSteps) {
       try {
         setDrawdownSteps(JSON.parse(decodeURIComponent(urlSteps)));
@@ -121,8 +124,10 @@ const App = () => {
         start_date: startDate,
         end_date: endDate,
         strategy: strategy,
-        drawdown_steps: strategy === 'DRAWDOWN' ? drawdownSteps : null
+        drawdown_steps: strategy === 'DRAWDOWN' ? drawdownSteps : null,
+        step_up_percent: (strategy === 'STEP_UP' || strategy === 'DRAWDOWN') ? stepUpPercent : 0.0
       });
+
       setResult(res.data);
     } catch (err) {
       console.error(err);
@@ -134,6 +139,7 @@ const App = () => {
       setLoading(false);
     }
   };
+
 
   const handleSelectPreset = (preset) => {
     setTicker(preset.ticker);
@@ -149,12 +155,16 @@ const App = () => {
     setTickerName(name || getTickerName(symbol));
   };
 
-  // Run simulation on load once dates/ticker are pre-populated
+  // Run simulation on variable updates with a 350ms debounce to prevent API spamming
   useEffect(() => {
     if (startDate && endDate && ticker) {
-      handleSimulate();
+      const timer = setTimeout(() => {
+        handleSimulate();
+      }, 350);
+      return () => clearTimeout(timer);
     }
-  }, [startDate, endDate, ticker, strategy, drawdownSteps]);
+  }, [startDate, endDate, ticker, strategy, drawdownSteps, stepUpPercent, amount]);
+
 
   // Export time-series data to CSV
   const handleExportCSV = () => {
@@ -184,7 +194,7 @@ const App = () => {
   // Share URL simulation mapping
   const handleShare = () => {
     const stepsParam = encodeURIComponent(JSON.stringify(drawdownSteps));
-    const shareUrl = `${window.location.origin}${window.location.pathname}?ticker=${ticker}&amount=${amount}&start=${startDate}&end=${endDate}&strategy=${strategy}&steps=${stepsParam}`;
+    const shareUrl = `${window.location.origin}${window.location.pathname}?ticker=${ticker}&amount=${amount}&start=${startDate}&end=${endDate}&strategy=${strategy}&steps=${stepsParam}&step_up=${stepUpPercent}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -285,8 +295,11 @@ const App = () => {
                 setStrategy={setStrategy} 
                 drawdownSteps={drawdownSteps} 
                 setDrawdownSteps={setDrawdownSteps} 
+                stepUpPercent={stepUpPercent}
+                setStepUpPercent={setStepUpPercent}
               />
             </div>
+
 
             <AmountSlider amount={amount} setAmount={setAmount} />
             <DateRangePicker 

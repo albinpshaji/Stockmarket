@@ -54,8 +54,17 @@ const MetricsGrid = ({ metrics }) => {
       value: metrics.sharpe_ratio,
       subtext: 'Risk-adjusted return',
       color: metrics.sharpe_ratio >= 1 ? 'var(--color-accent)' : metrics.sharpe_ratio >= 0 ? 'var(--text-primary)' : 'var(--color-danger)'
-    }
+    },
+    ...(metrics.final_monthly_installment ? [{
+      title: 'Final Monthly SIP',
+      value: formatINR(metrics.final_monthly_installment),
+      subtext: metrics.initial_monthly_installment && metrics.initial_monthly_installment !== metrics.final_monthly_installment
+        ? `Started at ${formatINR(metrics.initial_monthly_installment)} / mo`
+        : 'Monthly installment allocation',
+      color: 'var(--color-primary)'
+    }] : [])
   ];
+
 
   return (
     <div style={{

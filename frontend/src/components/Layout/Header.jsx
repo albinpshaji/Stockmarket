@@ -132,6 +132,14 @@ const Header = ({ strategy, setStrategy }) => {
                 </button>
                 
                 <button
+                  onClick={() => handleStrategyClick('STEP_UP')}
+                  className={`dropdown-item ${strategy === 'STEP_UP' ? 'active' : ''}`}
+                >
+                  <span style={{ fontWeight: 600 }}>Step-Up SIP</span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Increase contribution annually</span>
+                </button>
+
+                <button
                   onClick={() => handleStrategyClick('DRAWDOWN')}
                   className={`dropdown-item ${strategy === 'DRAWDOWN' ? 'active' : ''}`}
                 >
@@ -139,7 +147,7 @@ const Header = ({ strategy, setStrategy }) => {
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Buy the Dip allocation model</span>
                 </button>
 
-                {/* Extensibility placeholder items showing capability for 100+ strategies */}
+                {/* Extensibility placeholder items showing capability for future strategies */}
                 <div style={{
                   borderTop: '1px solid rgba(0,0,0,0.04)',
                   margin: '6px 0',
@@ -152,16 +160,12 @@ const Header = ({ strategy, setStrategy }) => {
                 }}>
                   Coming Soon
                 </div>
-
-                <div className="dropdown-item disabled">
-                  <span style={{ fontWeight: 600 }}>Step-Up SIP</span>
-                  <span style={{ fontSize: '0.7rem' }}>Increase contribution annually</span>
-                </div>
                 
                 <div className="dropdown-item disabled">
                   <span style={{ fontWeight: 600 }}>PE-Valuation SIP</span>
                   <span style={{ fontSize: '0.7rem' }}>Buy index based on PE ratios</span>
                 </div>
+
               </div>
             )}
           </div>
