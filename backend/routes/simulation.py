@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 import requests
 from services.data_service import fetch_historical_data
-from services.simulation_service import simulate_sip, simulate_drawdown_sip
+from services.simulation_service import simulate_sip, simulate_drawdown_sip, simulate_step_up_sip
 from services.metrics_service import calculate_metrics
 
 router = APIRouter(prefix="/api")
@@ -17,14 +17,15 @@ class SimulationRequest(BaseModel):
     monthly_amount: float = Field(..., gt=0, description="Monthly investment amount in INR")
     start_date: str = Field(..., description="Start date in YYYY-MM-DD format")
     end_date: str = Field(..., description="End date in YYYY-MM-DD format")
-    strategy: str = Field("NORMAL", description="Investment strategy type: NORMAL or DRAWDOWN")
+    strategy: str = Field("NORMAL", description="Investment strategy type: NORMAL, DRAWDOWN, or STEP_UP")
     drawdown_steps: Optional[List[DrawdownStep]] = Field(None, description="Custom thresholds for DRAWDOWN strategy")
+    step_up_percent: Optional[float] = Field(0.0, ge=0.0, le=100.0, description="Annual step up percentage for STEP_UP strategy")
 
 @router.post("/simulate")
 async def run_simulation(req: SimulationRequest):
     """
     Runs the monthly SIP backtesting simulation for a given ticker and date range.
-    Supports regular fixed monthly SIP or drawdown-based dynamic scaling.
+    Supports regular fixed monthly SIP, drawdown-based dynamic scaling, and annual step-up SIP.
     """
     try:
         # Fetch clean historical daily prices
@@ -33,9 +34,15 @@ async def run_simulation(req: SimulationRequest):
         # Execute the chosen strategy simulation
         if req.strategy == "DRAWDOWN" and req.drawdown_steps:
             steps_dict = [step.dict() for step in req.drawdown_steps]
-            sim_df = simulate_drawdown_sip(df, req.monthly_amount, steps_dict)
+            step_up = req.step_up_percent if req.step_up_percent is not None else 0.0
+            sim_df = simulate_drawdown_sip(df, req.monthly_amount, steps_dict, step_up)
+        elif req.strategy == "STEP_UP":
+            step_up = req.step_up_percent if req.step_up_percent is not None else 10.0
+            sim_df = simulate_step_up_sip(df, req.monthly_amount, step_up)
         else:
             sim_df = simulate_sip(df, req.monthly_amount)
+
+
             
         # Calculate key return and risk metrics
         metrics = calculate_metrics(sim_df, req.ticker)

@@ -1,11 +1,23 @@
-import pandas as pd
-import yfinance as yf
+import os
+import json
 import time
 from datetime import datetime
+import pandas as pd
+import yfinance as yf
 
-# In-memory dictionary cache: (ticker, start, end) -> (timestamp, DataFrame)
+# In-memory dictionary cache fallback: (ticker, start, end) -> (timestamp, DataFrame)
 DATA_CACHE = {}
-CACHE_TTL_SECONDS = 3600  # 1 hour TTL
+CACHE_TTL_SECONDS = 86400  # 24 hours TTL
+
+REDIS_CLIENT = None
+try:
+    import redis
+    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    client = redis.Redis.from_url(redis_url, socket_timeout=1.0, socket_connect_timeout=1.0)
+    client.ping()
+    REDIS_CLIENT = client
+except Exception:
+    REDIS_CLIENT = None
 
 def format_ticker(ticker: str) -> str:
     """
@@ -17,10 +29,47 @@ def format_ticker(ticker: str) -> str:
         return ticker
     return f"{ticker}.NS"
 
+def get_cached_df(formatted_symbol: str, start_date: str, end_date: str):
+    cache_key = (formatted_symbol, start_date, end_date)
+    redis_key = f"rupeesip:data:{formatted_symbol}:{start_date}:{end_date}"
+
+    if REDIS_CLIENT:
+        try:
+            cached_data = REDIS_CLIENT.get(redis_key)
+            if cached_data:
+                records = json.loads(cached_data.decode("utf-8"))
+                df = pd.DataFrame(records)
+                df["Date"] = pd.to_datetime(df["Date"])
+                return df
+        except Exception:
+            pass
+
+    if cache_key in DATA_CACHE:
+        cached_time, cached_df = DATA_CACHE[cache_key]
+        if time.time() - cached_time < CACHE_TTL_SECONDS:
+            return cached_df.copy()
+
+    return None
+
+def set_cached_df(formatted_symbol: str, start_date: str, end_date: str, df: pd.DataFrame):
+    cache_key = (formatted_symbol, start_date, end_date)
+    redis_key = f"rupeesip:data:{formatted_symbol}:{start_date}:{end_date}"
+
+    DATA_CACHE[cache_key] = (time.time(), df.copy())
+
+    if REDIS_CLIENT:
+        try:
+            df_copy = df.copy()
+            df_copy["Date"] = df_copy["Date"].dt.strftime("%Y-%m-%d")
+            records_json = json.dumps(df_copy.to_dict(orient="records"))
+            REDIS_CLIENT.set(redis_key, records_json, ex=CACHE_TTL_SECONDS)
+        except Exception:
+            pass
+
 def fetch_historical_data(ticker: str, start_date: str, end_date: str) -> pd.DataFrame:
     """
     Downloads historical adjusted closing prices from Yahoo Finance with validation,
-    in-memory caching (1-hour TTL), and standardizes the DataFrame.
+    Redis/in-memory persistent caching, and standardizes the DataFrame.
     """
     # 1. Input Date Validations
     try:
@@ -36,14 +85,11 @@ def fetch_historical_data(ticker: str, start_date: str, end_date: str) -> pd.Dat
         raise ValueError("End date cannot be in the future.")
 
     formatted_symbol = format_ticker(ticker)
-    cache_key = (formatted_symbol, start_date, end_date)
-    current_time = time.time()
 
     # 2. Check Cache
-    if cache_key in DATA_CACHE:
-        cached_time, cached_df = DATA_CACHE[cache_key]
-        if current_time - cached_time < CACHE_TTL_SECONDS:
-            return cached_df.copy()
+    cached_df = get_cached_df(formatted_symbol, start_date, end_date)
+    if cached_df is not None:
+        return cached_df.copy()
 
     # 3. Fetch data from Yahoo Finance
     try:
@@ -78,10 +124,11 @@ def fetch_historical_data(ticker: str, start_date: str, end_date: str) -> pd.Dat
             raise ValueError(f"No valid pricing data remaining for '{formatted_symbol}' after cleaning.")
             
         # 4. Save to Cache
-        DATA_CACHE[cache_key] = (current_time, df)
+        set_cached_df(formatted_symbol, start_date, end_date, df)
         return df
 
     except Exception as e:
         if "timeout" in str(e).lower():
             raise RuntimeError(f"Connection timeout fetching data for '{formatted_symbol}'. Yahoo Finance may be rate-limiting requests.")
         raise RuntimeError(f"Failed to fetch data for ticker '{formatted_symbol}': {str(e)}")
+

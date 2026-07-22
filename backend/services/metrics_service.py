@@ -79,6 +79,11 @@ def calculate_metrics(daily_df: pd.DataFrame, ticker: str) -> Dict[str, float]:
         sharpe_ratio = float((asset_returns.mean() - rf_daily) / asset_returns.std()) * np.sqrt(252)
     else:
         sharpe_ratio = 0.0
+
+    # Extract initial and final monthly investment installment amounts
+    investments = daily_df[daily_df['investment_diff'] > 0]['investment_diff']
+    initial_installment = float(investments.iloc[0]) if not investments.empty else total_invested
+    final_installment = float(investments.iloc[-1]) if not investments.empty else total_invested
         
     return {
         "total_invested": round(total_invested, 2),
@@ -86,5 +91,8 @@ def calculate_metrics(daily_df: pd.DataFrame, ticker: str) -> Dict[str, float]:
         "total_return_pct": round(total_return_pct, 2),
         "xirr_pct": round(xirr_pct, 2),
         "max_drawdown_pct": round(max_drawdown_pct, 2),
-        "sharpe_ratio": round(sharpe_ratio, 2)
+        "sharpe_ratio": round(sharpe_ratio, 2),
+        "initial_monthly_installment": round(initial_installment, 2),
+        "final_monthly_installment": round(final_installment, 2)
     }
+
