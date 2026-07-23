@@ -55,7 +55,7 @@ const AmountSlider = ({ amount, setAmount }) => {
             flex: 1,
             height: '6px',
             borderRadius: '3px',
-            background: 'rgba(255,255,255,0.1)',
+            background: 'rgba(0,0,0,0.06)',
             outline: 'none',
             cursor: 'pointer',
             accentColor: 'var(--color-primary)'
@@ -67,15 +67,25 @@ const AmountSlider = ({ amount, setAmount }) => {
           value={amount}
           onChange={handleTextChange}
           style={{
-            width: '100px',
+            width: '95px',
             padding: '8px 12px',
             fontSize: '0.85rem',
-            textAlign: 'right'
+            textAlign: 'right',
+            fontWeight: 600
           }}
         />
+      </div>
+
+      {/* Quick Increment Shortcut Chips */}
+      <div style={{ display: 'flex', gap: '6px', marginTop: '10px', flexWrap: 'wrap' }}>
+        <button type="button" className="quick-chip" onClick={() => setAmount(5000)}>₹5,000</button>
+        <button type="button" className="quick-chip" onClick={() => setAmount(10000)}>₹10,000</button>
+        <button type="button" className="quick-chip" onClick={() => setAmount(25000)}>₹25,000</button>
+        <button type="button" className="quick-chip" onClick={() => setAmount(50000)}>₹50,000</button>
       </div>
     </div>
   );
 };
+
 
 export default AmountSlider;

@@ -9,8 +9,10 @@ import PresetStrategies from './components/Controls/PresetStrategies';
 import StrategySelector from './components/Controls/StrategySelector';
 import PerformanceChart from './components/Chart/PerformanceChart';
 import MetricsGrid from './components/Metrics/MetricsGrid';
+import SkeletonLoader from './components/Common/SkeletonLoader';
 
 const App = () => {
+
   const [ticker, setTicker] = useState('');
   const [tickerName, setTickerName] = useState('');
   const [amount, setAmount] = useState(10000);
@@ -26,6 +28,12 @@ const App = () => {
   const [strategy, setStrategy] = useState('NORMAL');
   const [stepUpPercent, setStepUpPercent] = useState(10);
   const [interestRate, setInterestRate] = useState(6.5);
+  const [enableDividend, setEnableDividend] = useState(false);
+  const [dividendYield, setDividendYield] = useState(1.5);
+  const [lowPE, setLowPE] = useState(18);
+  const [highPE, setHighPE] = useState(24);
+  const [secondaryTicker, setSecondaryTicker] = useState('GC=F');
+  const [lookbackMonths, setLookbackMonths] = useState(12);
   const [drawdownSteps, setDrawdownSteps] = useState([
     { drawdown: 10, multiplier: 0 },
     { drawdown: 20, multiplier: 50 },
@@ -86,6 +94,11 @@ const App = () => {
     const urlSteps = params.get('steps');
     const urlStepUp = params.get('step_up');
     const urlInterestRate = params.get('interest_rate');
+    const urlDividend = params.get('dividend_yield');
+    const urlLowPE = params.get('low_pe');
+    const urlHighPE = params.get('high_pe');
+    const urlSecondary = params.get('secondary_ticker');
+    const urlLookback = params.get('lookback');
 
     const today = new Date();
     const defaultEnd = today.toISOString().split('T')[0];
@@ -102,6 +115,14 @@ const App = () => {
     if (urlStrategy) setStrategy(urlStrategy);
     if (urlStepUp) setStepUpPercent(Number(urlStepUp));
     if (urlInterestRate) setInterestRate(Number(urlInterestRate));
+    if (urlLowPE) setLowPE(Number(urlLowPE));
+    if (urlHighPE) setHighPE(Number(urlHighPE));
+    if (urlSecondary) setSecondaryTicker(urlSecondary);
+    if (urlLookback) setLookbackMonths(Number(urlLookback));
+    if (urlDividend) {
+      setEnableDividend(true);
+      setDividendYield(Number(urlDividend));
+    }
     if (urlSteps) {
       try {
         setDrawdownSteps(JSON.parse(decodeURIComponent(urlSteps)));
@@ -128,8 +149,13 @@ const App = () => {
         end_date: endDate,
         strategy: strategy,
         drawdown_steps: strategy === 'DRAWDOWN' ? drawdownSteps : null,
-        step_up_percent: (strategy === 'STEP_UP' || strategy === 'DRAWDOWN' || strategy === 'BANK_FD') ? stepUpPercent : 0.0,
-        interest_rate: interestRate
+        step_up_percent: (strategy === 'STEP_UP' || strategy === 'DRAWDOWN' || strategy === 'BANK_FD' || strategy === 'PE_VALUATION' || strategy === 'DUAL_MOMENTUM') ? stepUpPercent : 0.0,
+        interest_rate: interestRate,
+        dividend_yield: (enableDividend && strategy !== 'BANK_FD') ? dividendYield : 0.0,
+        low_pe_threshold: lowPE,
+        high_pe_threshold: highPE,
+        secondary_ticker: secondaryTicker,
+        lookback_months: lookbackMonths
       });
 
       setResult(res.data);
@@ -166,7 +192,9 @@ const App = () => {
       }, 350);
       return () => clearTimeout(timer);
     }
-  }, [startDate, endDate, ticker, strategy, drawdownSteps, stepUpPercent, amount, interestRate]);
+  }, [startDate, endDate, ticker, strategy, drawdownSteps, stepUpPercent, amount, interestRate, enableDividend, dividendYield, lowPE, highPE, secondaryTicker, lookbackMonths]);
+
+
 
 
 
@@ -303,7 +331,21 @@ const App = () => {
                 setStepUpPercent={setStepUpPercent}
                 interestRate={interestRate}
                 setInterestRate={setInterestRate}
+                enableDividend={enableDividend}
+                setEnableDividend={setEnableDividend}
+                dividendYield={dividendYield}
+                setDividendYield={setDividendYield}
+                lowPE={lowPE}
+                setLowPE={setLowPE}
+                highPE={highPE}
+                setHighPE={setHighPE}
+                secondaryTicker={secondaryTicker}
+                setSecondaryTicker={setSecondaryTicker}
+                lookbackMonths={lookbackMonths}
+                setLookbackMonths={setLookbackMonths}
               />
+
+
 
             </div>
 
@@ -363,27 +405,9 @@ const App = () => {
             )}
 
             {loading ? (
-              <div className="glass-card" style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minHeight: '400px',
-                gap: '16px'
-              }}>
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  border: '3px solid rgba(0,0,0,0.05)',
-                  borderTopColor: 'var(--color-primary)',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite'
-                }} />
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                  Running simulation...
-                </p>
-              </div>
+              <SkeletonLoader />
             ) : (
+
               result && (
                 <>
                   <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

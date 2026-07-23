@@ -76,12 +76,13 @@ const PresetStrategies = ({ currentTicker, currentAmount, onSelectPreset }) => {
           return (
             <button
               key={preset.label}
+              type="button"
               onClick={() => handleSelect(preset)}
               style={{
-                padding: '12px 10px',
-                background: active ? 'rgba(59, 130, 246, 0.06)' : 'rgba(255, 255, 255, 0.03)',
-                border: active ? '2px solid var(--color-primary)' : '1px solid var(--border-color)',
-                borderRadius: '12px',
+                padding: '12px 12px',
+                background: active ? 'rgba(59, 130, 246, 0.08)' : 'rgba(255, 255, 255, 0.7)',
+                border: active ? '1.5px solid var(--color-primary)' : '1px solid rgba(0, 0, 0, 0.08)',
+                borderRadius: '16px',
                 color: 'var(--text-primary)',
                 cursor: 'pointer',
                 textAlign: 'left',
@@ -89,24 +90,18 @@ const PresetStrategies = ({ currentTicker, currentAmount, onSelectPreset }) => {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '4px',
-                boxShadow: active ? '0 0 10px rgba(59, 130, 246, 0.12)' : 'none'
-              }}
-              onMouseEnter={(e) => {
-                if (!active) {
-                  e.currentTarget.style.borderColor = 'var(--color-primary)';
-                  e.currentTarget.style.background = 'rgba(59, 130, 246, 0.05)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!active) {
-                  e.currentTarget.style.borderColor = 'var(--border-color)';
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-                }
+                position: 'relative',
+                boxShadow: active ? '0 4px 12px rgba(59, 130, 246, 0.15)' : '0 2px 5px rgba(0,0,0,0.02)'
               }}
             >
-              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{preset.label}</span>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                {preset.yearsAgo} Yrs • ₹{preset.amount}/mo
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: active ? 'var(--color-primary)' : '#0f172a' }}>{preset.label}</span>
+                {active && (
+                  <span style={{ fontSize: '0.7rem', color: 'var(--color-primary)', fontWeight: 700 }}>✓</span>
+                )}
+              </div>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                {preset.yearsAgo} Yrs • ₹{preset.amount.toLocaleString('en-IN')}/mo
               </span>
             </button>
           );
@@ -115,5 +110,6 @@ const PresetStrategies = ({ currentTicker, currentAmount, onSelectPreset }) => {
     </div>
   );
 };
+
 
 export default PresetStrategies;

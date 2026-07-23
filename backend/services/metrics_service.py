@@ -16,26 +16,32 @@ def calculate_xirr(cash_flows: List[Tuple[datetime, float]]) -> float:
     
     # NPV formula
     def f(r):
-        return sum(amount / ((1 + r) ** t) for t, amount in years_and_flows)
+        r_base = max(1e-4, 1.0 + r)
+        return sum(amount / (r_base ** t) for t, amount in years_and_flows)
         
     # Derivative of NPV formula with respect to r
     def df_dr(r):
-        return sum(-t * amount / ((1 + r) ** (t + 1)) for t, amount in years_and_flows)
+        r_base = max(1e-4, 1.0 + r)
+        return sum(-t * amount / (r_base ** (t + 1.0)) for t, amount in years_and_flows)
         
     # Standard Newton-Raphson root-finding loop
     r = 0.1
     for _ in range(100):
-        val = f(r)
-        deriv = df_dr(r)
-        if deriv == 0:
+        try:
+            val = f(r)
+            deriv = df_dr(r)
+            if deriv == 0:
+                break
+            next_r = r - val / deriv
+            if abs(next_r - r) < 1e-6:
+                if -0.99 < next_r < 10.0:
+                    return next_r * 100.0
+                break
+            r = max(-0.99, min(10.0, next_r))
+        except Exception:
             break
-        next_r = r - val / deriv
-        if abs(next_r - r) < 1e-6:
-            if -0.99 < next_r < 10.0:
-                return next_r * 100
-            break
-        r = next_r
     return 0.0
+
 
 def calculate_metrics(daily_df: pd.DataFrame, ticker: str) -> Dict[str, float]:
     """
@@ -74,7 +80,8 @@ def calculate_metrics(daily_df: pd.DataFrame, ticker: str) -> Dict[str, float]:
     # Calculate Sharpe ratio of the underlying asset to avoid deposit distortions in portfolio returns.
     # Assumes a 6% annualized Indian risk-free rate.
     rf_daily = 0.06 / 252
-    asset_returns = daily_df['price'].pct_change().dropna()
+    valid_prices = daily_df[daily_df['price'] > 0]['price']
+    asset_returns = valid_prices.pct_change().dropna()
     if len(asset_returns) > 1 and asset_returns.std() > 0:
         sharpe_ratio = float((asset_returns.mean() - rf_daily) / asset_returns.std()) * np.sqrt(252)
     else:
@@ -84,6 +91,7 @@ def calculate_metrics(daily_df: pd.DataFrame, ticker: str) -> Dict[str, float]:
     investments = daily_df[daily_df['investment_diff'] > 0]['investment_diff']
     initial_installment = float(investments.iloc[0]) if not investments.empty else total_invested
     final_installment = float(investments.iloc[-1]) if not investments.empty else total_invested
+    dividends_reinvested = float(daily_df['dividends_reinvested'].iloc[-1]) if 'dividends_reinvested' in daily_df.columns else 0.0
         
     return {
         "total_invested": round(total_invested, 2),
@@ -93,6 +101,8 @@ def calculate_metrics(daily_df: pd.DataFrame, ticker: str) -> Dict[str, float]:
         "max_drawdown_pct": round(max_drawdown_pct, 2),
         "sharpe_ratio": round(sharpe_ratio, 2),
         "initial_monthly_installment": round(initial_installment, 2),
-        "final_monthly_installment": round(final_installment, 2)
+        "final_monthly_installment": round(final_installment, 2),
+        "dividends_reinvested": round(dividends_reinvested, 2)
     }
+
 

@@ -148,32 +148,30 @@ const Header = ({ strategy, setStrategy }) => {
                 </button>
 
                 <button
+                  onClick={() => handleStrategyClick('PE_VALUATION')}
+                  className={`dropdown-item ${strategy === 'PE_VALUATION' ? 'active' : ''}`}
+                >
+                  <span style={{ fontWeight: 600 }}>PE-Valuation SIP</span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Dynamic allocation based on market valuation</span>
+                </button>
+
+                <button
+                  onClick={() => handleStrategyClick('DUAL_MOMENTUM')}
+                  className={`dropdown-item ${strategy === 'DUAL_MOMENTUM' ? 'active' : ''}`}
+                >
+                  <span style={{ fontWeight: 600 }}>Dual Momentum SIP</span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Antonacci's cross-asset momentum rotation</span>
+                </button>
+
+                <div style={{ height: '1px', background: 'rgba(0,0,0,0.06)', margin: '4px 0' }} />
+
+                <button
                   onClick={() => handleStrategyClick('BANK_FD')}
                   className={`dropdown-item ${strategy === 'BANK_FD' ? 'active' : ''}`}
                 >
-                  <span style={{ fontWeight: 600 }}>Bank RD / FD Benchmark</span>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Guaranteed 6.5% p.a. bank compounding</span>
+                  <span style={{ fontWeight: 600 }}>Bank RD / FD</span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Risk-free fixed deposit baseline</span>
                 </button>
-
-
-                {/* Extensibility placeholder items showing capability for future strategies */}
-                <div style={{
-                  borderTop: '1px solid rgba(0,0,0,0.04)',
-                  margin: '6px 0',
-                  padding: '6px 14px 2px 14px',
-                  fontSize: '0.7rem',
-                  color: 'var(--text-secondary)',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
-                }}>
-                  Coming Soon
-                </div>
-                
-                <div className="dropdown-item disabled">
-                  <span style={{ fontWeight: 600 }}>PE-Valuation SIP</span>
-                  <span style={{ fontSize: '0.7rem' }}>Buy index based on PE ratios</span>
-                </div>
 
               </div>
             )}

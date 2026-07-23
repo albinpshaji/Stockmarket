@@ -25,7 +25,7 @@ def format_ticker(ticker: str) -> str:
     Appends '.NS' (National Stock Exchange) for raw equities if no suffix is present.
     """
     ticker = ticker.strip().upper()
-    if ticker.startswith("^") or "." in ticker or "-" in ticker:
+    if ticker.startswith("^") or "." in ticker or "-" in ticker or "=" in ticker:
         return ticker
     return f"{ticker}.NS"
 
